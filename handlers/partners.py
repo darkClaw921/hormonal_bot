@@ -186,6 +186,14 @@ async def handle_partner_id_input(message: Message, db_session: AsyncSession, bo
     if input_text.startswith("@"):
         # Это username
         partner_username = input_text[1:]
+        # Получаем информацию о боте для генерации ссылки
+        try:
+            bot_info = await bot.get_me()
+            bot_username = bot_info.username
+            invite_link = f"https://t.me/{bot_username}?start=partner_{telegram_id}"
+        except Exception:
+            invite_link = f"https://t.me/your_bot?start=partner_{telegram_id}"
+        
         # Пытаемся получить информацию о пользователе через бота
         try:
             # В aiogram 3.x нет прямого способа получить user по username
@@ -193,7 +201,7 @@ async def handle_partner_id_input(message: Message, db_session: AsyncSession, bo
             await message.answer(
                 "⚠️ Для добавления по username попросите партнера отправить вам его Telegram ID "
                 "или используйте ссылку-приглашение:\n"
-                f"https://t.me/your_bot?start=partner_{telegram_id}\n\n"
+                f"{invite_link}\n\n"
                 "Telegram ID можно узнать у бота @userinfobot",
                 reply_markup=get_partners_menu()
             )
@@ -201,7 +209,7 @@ async def handle_partner_id_input(message: Message, db_session: AsyncSession, bo
         except Exception:
             await message.answer(
                 "❌ Не удалось найти пользователя по username. "
-                "Попросите партнера отправить вам его Telegram ID или используйте ссылку-приглашение.",
+                f"Попросите партнера отправить вам его Telegram ID или используйте ссылку-приглашение:\n{invite_link}",
                 reply_markup=get_partners_menu()
             )
             return

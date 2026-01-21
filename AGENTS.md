@@ -42,3 +42,4 @@ bd ready	List tasks with no open blockers.
 bd create "Title" 
 bd dep add <child> <parent>	Link tasks (blocks, related, parent-child).
 bd show <id>	View task details and audit trail.
++
