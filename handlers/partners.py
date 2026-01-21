@@ -25,6 +25,25 @@ router = Router()
 _waiting_for_partner_id: dict[int, bool] = {}
 
 
+def get_partner_explanation_text(user_name: str) -> str:
+    """
+    Генерирует объяснялку для партнера.
+    
+    Args:
+        user_name: Имя пользователя, партнером которого является текущий пользователь
+        
+    Returns:
+        Текст объяснялки для партнера
+    """
+    return (
+        f"💕 Привет! Ты теперь партнер {user_name}.\n\n"
+        f"✨ Здесь ты будешь получать актуальную информацию о фазах её цикла.\n"
+        f"📱 Мы будем отправлять тебе уведомления о важных изменениях.\n\n"
+        f"💬 Просто жди новостей от своей леди — мы обо всём сообщим!\n\n"
+        f"🔄 Используй кнопку ниже, чтобы обновить информацию о текущей фазе."
+    )
+
+
 @router.message(F.text == "Партнеры")
 async def handle_partners_menu(message: Message, db_session: AsyncSession) -> None:
     """
@@ -421,8 +440,9 @@ async def handle_refresh_partner_info(callback: CallbackQuery, db_session: Async
     last_entry = result.scalar_one_or_none()
     
     if last_entry is None:
+        explanation_text = get_partner_explanation_text(user_name)
         await callback.message.edit_text(
-            f"👥 Вы являетесь партнером пользователя {user_name}.\n\n"
+            f"{explanation_text}\n\n"
             f"📅 Информация о цикле пока недоступна.\n"
             f"Пользователь еще не ввел данные о своем цикле.",
             reply_markup=get_partner_info_keyboard()
@@ -445,9 +465,10 @@ async def handle_refresh_partner_info(callback: CallbackQuery, db_session: Async
     
     # Форматируем информацию о фазе с советами для партнера
     phase_text = PhaseFormatter.format_phase_info(phase_info, include_partner_advice=True)
+    explanation_text = get_partner_explanation_text(user_name)
     
     await callback.message.edit_text(
-        f"👥 Вы являетесь партнером пользователя {user_name}.\n\n"
+        f"{explanation_text}\n\n"
         f"{phase_text}",
         reply_markup=get_partner_info_keyboard(),
         parse_mode="Markdown"
@@ -489,8 +510,9 @@ async def handle_partner_command(message: Message, db_session: AsyncSession) -> 
     last_entry = result.scalar_one_or_none()
     
     if last_entry is None:
+        explanation_text = get_partner_explanation_text(user_name)
         await message.answer(
-            f"👥 Вы являетесь партнером пользователя {user_name}.\n\n"
+            f"{explanation_text}\n\n"
             f"📅 Информация о цикле пока недоступна.\n"
             f"Пользователь еще не ввел данные о своем цикле.",
             reply_markup=get_partner_info_keyboard()
@@ -511,9 +533,10 @@ async def handle_partner_command(message: Message, db_session: AsyncSession) -> 
     
     # Форматируем информацию о фазе с советами для партнера
     phase_text = PhaseFormatter.format_phase_info(phase_info, include_partner_advice=True)
+    explanation_text = get_partner_explanation_text(user_name)
     
     await message.answer(
-        f"👥 Вы являетесь партнером пользователя {user_name}.\n\n"
+        f"{explanation_text}\n\n"
         f"{phase_text}",
         reply_markup=get_partner_info_keyboard(),
         parse_mode="Markdown"

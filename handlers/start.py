@@ -12,6 +12,7 @@ from keyboards.partners import get_partner_info_keyboard
 from services.partner_service import PartnerService
 from services.cycle_service import CycleService
 from services.phase_formatter import PhaseFormatter
+from handlers.partners import get_partner_explanation_text
 
 router = Router()
 
@@ -71,11 +72,10 @@ async def cmd_start(message: Message, db_session: AsyncSession) -> None:
                 )
             else:
                 inviting_user_name = inviting_user.username or f"Пользователь (ID: {inviting_user.telegram_id})"
+                explanation_text = get_partner_explanation_text(inviting_user_name)
                 await message.answer(
                     f"✅ Вы успешно добавлены в качестве партнера!\n\n"
-                    f"Пользователь {inviting_user_name} добавил вас для получения "
-                    f"уведомлений о фазах цикла.\n\n"
-                    f"Используйте команду /partner для просмотра текущей информации о цикле."
+                    f"{explanation_text}"
                 )
             
             # Показываем партнерский интерфейс
@@ -161,8 +161,9 @@ async def show_partner_interface(message: Message, db_session: AsyncSession, par
     last_entry = result.scalar_one_or_none()
     
     if last_entry is None:
+        explanation_text = get_partner_explanation_text(user_name)
         await message.answer(
-            f"👥 Вы являетесь партнером пользователя {user_name}.\n\n"
+            f"{explanation_text}\n\n"
             f"📅 Информация о цикле пока недоступна.\n"
             f"Пользователь еще не ввел данные о своем цикле.",
             reply_markup=get_partner_info_keyboard()
@@ -183,9 +184,10 @@ async def show_partner_interface(message: Message, db_session: AsyncSession, par
     
     # Форматируем информацию о фазе с советами для партнера
     phase_text = PhaseFormatter.format_phase_info(phase_info, include_partner_advice=True)
+    explanation_text = get_partner_explanation_text(user_name)
     
     await message.answer(
-        f"👥 Вы являетесь партнером пользователя {user_name}.\n\n"
+        f"{explanation_text}\n\n"
         f"{phase_text}",
         reply_markup=get_partner_info_keyboard(),
         parse_mode="Markdown"
